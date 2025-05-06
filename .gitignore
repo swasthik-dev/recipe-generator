@@ -1,0 +1,11 @@
+node_modules
+__pycache__/
+*.pyc
+.env
+*.sqlite3
+alembic.ini
+.idea/
+.vscode/
+.venv/
+__pycache__/
+*.pyc
