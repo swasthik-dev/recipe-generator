@@ -1,6 +1,6 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { jwtDecode } from 'jwt-decode';
-import { AuthContextType, User } from '../types';
+import React, { createContext, useState, useEffect, ReactNode } from "react";
+import { jwtDecode } from "jwt-decode";
+import { AuthContextType, User } from "../types";
 
 export const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -16,36 +16,7 @@ type AuthProviderProps = {
   children: ReactNode;
 };
 
-// In a real application, this would communicate with a backend
-const mockLogin = async (email: string, password: string): Promise<{ user: User; token: string }> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (email && password) {
-        resolve({
-          user: { id: '1', email, name: 'Demo User' },
-          token: 'mock-jwt-token',
-        });
-      } else {
-        reject(new Error('Invalid credentials'));
-      }
-    }, 1000);
-  });
-};
-
-const mockRegister = async (email: string, password: string, name: string): Promise<{ user: User; token: string }> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (email && password && name) {
-        resolve({
-          user: { id: '1', email, name },
-          token: 'mock-jwt-token',
-        });
-      } else {
-        reject(new Error('Invalid registration details'));
-      }
-    }, 1000);
-  });
-};
+const API_BASE_URL = "http://localhost:5000/api/auth"; // change if hosted elsewhere
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -54,17 +25,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if we have a token in localStorage
-    const storedToken = localStorage.getItem('auth_token');
+    const storedToken = localStorage.getItem("auth_token");
     if (storedToken) {
       try {
-        // In a real app, we would decode the JWT to get the user data
-        // const decoded = jwtDecode(storedToken);
-        // setUser(decoded.user);
-        setUser({ id: '1', email: 'demo@example.com', name: 'Demo User' });
+        const decoded: any = jwtDecode(storedToken);
+        setUser({ id: decoded.sub, email: decoded.sub, name: "User" }); // use `sub` for username
         setToken(storedToken);
       } catch (err) {
-        localStorage.removeItem('auth_token');
+        localStorage.removeItem("auth_token");
       }
     }
     setIsLoading(false);
@@ -74,12 +42,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const { user, token } = await mockLogin(email, password);
-      setUser(user);
-      setToken(token);
-      localStorage.setItem('auth_token', token);
+      const formData = new URLSearchParams();
+      formData.append("username", email);
+      formData.append("password", password);
+
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString(),
+      });
+
+      if (!response.ok) {
+        throw new Error("Invalid credentials");
+      }
+
+      const data = await response.json();
+      const decoded: any = jwtDecode(data.access_token);
+
+      const userObj: User = {
+        id: decoded.sub,
+        email: decoded.sub,
+        name: "User",
+      };
+
+      setUser(userObj);
+      setToken(data.access_token);
+      localStorage.setItem("auth_token", data.access_token);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during login');
+      setError(err instanceof Error ? err.message : "Login error");
     } finally {
       setIsLoading(false);
     }
@@ -89,12 +79,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const { user, token } = await mockRegister(email, password, name);
-      setUser(user);
-      setToken(token);
-      localStorage.setItem('auth_token', token);
+      console.log("Creating user with email:", email, "and name:", name);
+      const response = await fetch(`${API_BASE_URL}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: email, password }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || "Registration failed");
+      }
+
+      // Auto-login after successful signup
+      await login(email, password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during registration');
+      setError(err instanceof Error ? err.message : "Registration error");
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('auth_token');
+    localStorage.removeItem("auth_token");
   };
 
   return (

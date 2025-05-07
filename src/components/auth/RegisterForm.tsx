@@ -1,13 +1,13 @@
-import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ChefHat, Mail, Lock, User, UserPlus } from 'lucide-react';
-import { AuthContext } from '../../context/AuthContext';
+import React, { useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ChefHat, Mail, Lock, User, UserPlus } from "lucide-react";
+import { AuthContext } from "../../context/AuthContext";
 
 const RegisterForm: React.FC = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const { register, isLoading, error } = useContext(AuthContext);
@@ -15,39 +15,40 @@ const RegisterForm: React.FC = () => {
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
-    
+
     if (!name) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     }
-    
+
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = "Email is invalid";
     }
-    
+
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = "Password must be at least 6 characters";
     }
-    
+
     if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("Registering user:", { name, email, password });
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     try {
       await register(email, password, name);
-      navigate('/');
+      navigate("/");
     } catch (err) {
       // Error is handled by the AuthContext
     }
@@ -60,18 +61,22 @@ const RegisterForm: React.FC = () => {
           <ChefHat size={32} className="text-primary-600" />
         </div>
         <h1 className="text-2xl font-bold">Create an Account</h1>
-        <p className="text-neutral-600 mt-1">Join RecipeAI to discover custom recipes</p>
+        <p className="text-neutral-600 mt-1">
+          Join RecipeAI to discover custom recipes
+        </p>
       </div>
-      
+
       {error && (
         <div className="mb-4 p-3 bg-error-100 text-error-700 rounded-md text-sm">
           {error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label htmlFor="name" className="label">Full Name</label>
+          <label htmlFor="name" className="label">
+            Full Name
+          </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <User size={18} className="text-neutral-400" />
@@ -89,9 +94,11 @@ const RegisterForm: React.FC = () => {
             <p className="text-error-500 text-sm mt-1">{errors.name}</p>
           )}
         </div>
-        
+
         <div className="mb-4">
-          <label htmlFor="email" className="label">Email</label>
+          <label htmlFor="email" className="label">
+            Email
+          </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Mail size={18} className="text-neutral-400" />
@@ -109,9 +116,11 @@ const RegisterForm: React.FC = () => {
             <p className="text-error-500 text-sm mt-1">{errors.email}</p>
           )}
         </div>
-        
+
         <div className="mb-4">
-          <label htmlFor="password" className="label">Password</label>
+          <label htmlFor="password" className="label">
+            Password
+          </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Lock size={18} className="text-neutral-400" />
@@ -129,9 +138,11 @@ const RegisterForm: React.FC = () => {
             <p className="text-error-500 text-sm mt-1">{errors.password}</p>
           )}
         </div>
-        
+
         <div className="mb-6">
-          <label htmlFor="confirmPassword" className="label">Confirm Password</label>
+          <label htmlFor="confirmPassword" className="label">
+            Confirm Password
+          </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Lock size={18} className="text-neutral-400" />
@@ -146,10 +157,12 @@ const RegisterForm: React.FC = () => {
             />
           </div>
           {errors.confirmPassword && (
-            <p className="text-error-500 text-sm mt-1">{errors.confirmPassword}</p>
+            <p className="text-error-500 text-sm mt-1">
+              {errors.confirmPassword}
+            </p>
           )}
         </div>
-        
+
         <button
           type="submit"
           disabled={isLoading}
@@ -168,11 +181,14 @@ const RegisterForm: React.FC = () => {
           )}
         </button>
       </form>
-      
+
       <div className="mt-6 text-center">
         <p className="text-neutral-600">
-          Already have an account?{' '}
-          <Link to="/login" className="text-primary-600 hover:text-primary-500 font-medium">
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            className="text-primary-600 hover:text-primary-500 font-medium"
+          >
             Log in
           </Link>
         </p>
