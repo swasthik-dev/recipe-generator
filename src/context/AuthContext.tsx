@@ -42,14 +42,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const formData = new URLSearchParams();
-      formData.append("username", email);
-      formData.append("password", password);
-
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString(),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
@@ -57,17 +53,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const data = await response.json();
-      const decoded: any = jwtDecode(data.access_token);
+      const decoded: any = jwtDecode(data.token); // assuming backend sends `token`
 
       const userObj: User = {
-        id: decoded.sub,
-        email: decoded.sub,
+        id: decoded.sub || decoded.userId,
+        email: decoded.email || decoded.sub,
         name: "User",
       };
 
       setUser(userObj);
-      setToken(data.access_token);
-      localStorage.setItem("auth_token", data.access_token);
+      setToken(data.token);
+      localStorage.setItem("auth_token", data.token);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login error");
     } finally {
@@ -79,11 +75,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      console.log("Creating user with email:", email, "and name:", name);
+      console.log(
+        "Creating user with email:",
+        email,
+        "and password:",
+        password
+      );
       const response = await fetch(`${API_BASE_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: email, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
